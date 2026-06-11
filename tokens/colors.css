@@ -1,0 +1,71 @@
+/* ============================================================
+   Bookland — Color tokens
+   Source: Bookland – Book Store Ecommerce Website (Peterdraw)
+   ============================================================ */
+
+:root {
+  /* ---- Base palette ---- */
+  /* Ink / deep indigo-navy — headings, logo "Book", primary dark buttons */
+  --bl-ink-900: #1b1642;
+  --bl-ink-800: #241d56;
+  --bl-indigo-700: #2d2766;   /* navy buttons, slider handles, active pagination */
+  --bl-indigo-600: #3b3486;
+
+  /* Brand orange — CTAs, links, logo "land", discount badges */
+  --bl-orange-600: #dd8a38;
+  --bl-orange-500: #efa053;
+  --bl-orange-400: #f3b271;
+  --bl-peach-100: #fdf1e2;    /* icon chips, selected payment card bg */
+
+  /* Vermillion — star ratings */
+  --bl-star-500: #ef6144;
+
+  /* Pink / magenta — counter badges, stat icons */
+  --bl-pink-500: #ef3e77;
+  --bl-pink-300: #f4a7c9;     /* stat tile icons */
+  --bl-pink-200: #f8cade;     /* stat tile dashed borders */
+
+  /* Green — stock / success */
+  --bl-green-500: #23a455;
+  --bl-green-400: #3bb873;
+
+  /* Lavender — quiet fills (wishlist buttons, chips, "already in cart") */
+  --bl-lavender-200: #e9e7f9;
+  --bl-lavender-100: #f0effb;
+
+  /* Neutrals (cool, violet-tinted) */
+  --bl-gray-700: #565073;     /* strong body */
+  --bl-gray-500: #756f8f;     /* body text */
+  --bl-gray-400: #9d98b3;     /* captions, placeholders, disabled text */
+  --bl-gray-200: #e8e6f0;     /* hairlines, borders */
+  --bl-gray-100: #f7f7fb;     /* page-tint surfaces, search field */
+  --bl-white: #ffffff;
+
+  /* Footer / imagery overlay */
+  --bl-plum-overlay: rgba(61, 46, 87, 0.85);
+
+  /* ---- Semantic aliases ---- */
+  --text-heading: var(--bl-ink-900);
+  --text-body: var(--bl-gray-500);
+  --text-muted: var(--bl-gray-400);
+  --text-on-dark: var(--bl-white);
+  --text-link: var(--bl-orange-500);
+
+  --surface-page: var(--bl-white);
+  --surface-tint: var(--bl-gray-100);
+  --surface-card: var(--bl-white);
+  --surface-quiet: var(--bl-lavender-100);
+  --surface-selected: var(--bl-peach-100);
+
+  --border-default: var(--bl-gray-200);
+  --border-strong: var(--bl-gray-400);
+
+  --action-primary: var(--bl-orange-500);
+  --action-primary-hover: var(--bl-orange-600);
+  --action-dark: var(--bl-indigo-700);
+  --action-dark-hover: var(--bl-ink-800);
+
+  --accent-rating: var(--bl-star-500);
+  --accent-badge: var(--bl-pink-500);
+  --accent-success: var(--bl-green-500);
+}

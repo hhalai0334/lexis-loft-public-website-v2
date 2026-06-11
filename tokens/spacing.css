@@ -1,0 +1,42 @@
+/* ============================================================
+   Bookland — Spacing, radii, shadows, motion
+   ============================================================ */
+
+:root {
+  /* Spacing (8px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-section: 120px;     /* vertical rhythm between page sections */
+
+  /* Radii */
+  --radius-sm: 6px;           /* chips, promo tags, badges */
+  --radius-md: 8px;           /* buttons, inputs, payment cards */
+  --radius-lg: 12px;          /* cards, map, covers */
+  --radius-pill: 999px;       /* genre pills, slider value chips */
+
+  /* Shadows — soft, ink-tinted, generous blur. Cards rest flat (border or
+     nothing) and lift on hover/active state. */
+  --shadow-card: 0 12px 30px rgba(27, 22, 66, 0.06);
+  --shadow-card-hover: 0 24px 50px rgba(27, 22, 66, 0.12);
+  --shadow-button: 0 8px 20px rgba(239, 160, 83, 0.35);
+
+  /* Borders */
+  --border-hairline: 1px solid var(--border-default);
+  --border-dashed-stat: 1px dashed var(--bl-pink-200);
+
+  /* Motion — quiet ease-outs, no bounces */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1); /* @kind other */
+  --duration-fast: 150ms; /* @kind other */
+  --duration-base: 250ms; /* @kind other */
+
+  /* Layout */
+  --page-max: 1568px;         /* content well on 1920 canvas */
+  --header-h: 96px;
+}
