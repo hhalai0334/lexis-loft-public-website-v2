@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lexis Loft · Library &amp; Book Store</title>
+
+  <link rel="stylesheet" href="../_ds/bookland-design-system-96231776-f89e-4a7b-8fcc-cf1a55e5718c/tokens/colors.css"/>
+  <link rel="stylesheet" href="../_ds/bookland-design-system-96231776-f89e-4a7b-8fcc-cf1a55e5718c/tokens/typography.css"/>
+  <link rel="stylesheet" href="../_ds/bookland-design-system-96231776-f89e-4a7b-8fcc-cf1a55e5718c/tokens/spacing.css"/>
+  <link rel="stylesheet" href="../_ds/bookland-design-system-96231776-f89e-4a7b-8fcc-cf1a55e5718c/styles.css"/>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script src="../_ds/bookland-design-system-96231776-f89e-4a7b-8fcc-cf1a55e5718c/_ds_bundle.js"></script>
+  <script src="bl-data.js"></script>
+
+  <script type="text/babel" src="bl-shared.jsx"></script>
+  <script type="text/babel" src="bl-brand.jsx"></script>
+  <script type="text/babel" src="bl-home.jsx"></script>
+  <script type="text/babel" src="bl-catalogue.jsx"></script>
+  <script type="text/babel" src="bl-book.jsx"></script>
+  <script type="text/babel" src="bl-auth.jsx"></script>
+  <script type="text/babel" src="bl-account.jsx"></script>
+  <script type="text/babel" src="bl-commerce.jsx"></script>
+  <script type="text/babel" src="bl-info.jsx"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font-ui); background: var(--surface-page); color: var(--text-body); }
+    button { font-family: var(--font-ui); }
+    input, textarea, select { font-family: var(--font-ui); }
+    ::placeholder { color: var(--bl-gray-400); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function usePersisted(key, def) {
+  const [val, setVal] = useState(() => {
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : def; } catch { return def; }
+  });
+  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }, [val]);
+  return [val, setVal];
+}
+
+function App() {
+  const [page,        setPage]        = useState('home');
+  const [pageData,    setPageData]    = useState(null);
+  const [cart,        setCart]        = usePersisted('blx_cart',  [BOOKS[1]]);
+  const [wishlist,    setWishlist]    = usePersisted('blx_wish',  [1, 3, 9]);
+  const [isLoggedIn,  setIsLoggedIn]  = usePersisted('blx_auth',  false);
+  const [loans,       setLoans]       = usePersisted('blx_loans', LOANS);
+  const [holds,       setHolds]       = usePersisted('blx_holds', HOLDS);
+  const [appToast,    setAppToast]    = useState(null);
+  const [loginReturn, setLoginReturn] = useState(null);
+
+  const navigate = (newPage, data = null) => {
+    setPage(newPage);
+    setPageData(data);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showToast = msg => setAppToast(msg);
+
+  const onWish = id =>
+    setWishlist(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const addToCart = book =>
+    setCart(prev => prev.find(b => b.id === book.id) ? prev : [...prev, book]);
+
+  const removeFromCart = id =>
+    setCart(prev => prev.filter(b => b.id !== id));
+
+  const onBorrow = (book, returnPage) => {
+    if (!isLoggedIn) {
+      setLoginReturn(returnPage || { page: 'book-detail', data: { book } });
+      navigate('login');
+      return;
+    }
+    if (loans.find(l => l.book.id === book.id)) {
+      showToast('Already in your Active Loans!');
+      return;
+    }
+    const fmt = book.formats?.includes('eBook') ? 'eBook' : book.formats?.[0] || 'eBook';
+    const due = new Date(Date.now() + 14 * 864e5);
+    const fmtDate = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    setLoans(prev => [...prev, {
+      id: Date.now(), book,
+      borrowedDate: fmtDate(new Date()),
+      dueDate:      fmtDate(due),
+      daysLeft: 14, format: fmt, canRenew: true,
+    }]);
+    showToast(`"${book.title}" borrowed! Find it in Active Loans.`);
+  };
+
+  const onReserve = (book, returnPage) => {
+    if (!isLoggedIn) {
+      setLoginReturn(returnPage || { page: 'book-detail', data: { book } });
+      navigate('login');
+      return;
+    }
+    if (holds.find(h => h.book.id === book.id)) {
+      showToast('Hold already placed for this book!');
+      return;
+    }
+    const position = Math.floor(Math.random() * 4) + 2;
+    const fmtDate = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    setHolds(prev => [...prev, {
+      id: Date.now(), book, position,
+      totalInQueue: position + Math.floor(Math.random() * 8),
+      addedDate: fmtDate(new Date()),
+      estimatedWait: `${position}–${position + 1} weeks`,
+    }]);
+    showToast(`Hold placed — you're #${position} in the queue for "${book.title}".`);
+  };
+
+  const shared = {
+    navigate, wishlist, onWish, addToCart, removeFromCart,
+    cart, setCart, isLoggedIn, setIsLoggedIn,
+    loans, setLoans, holds, setHolds,
+    onBorrow, onReserve, showToast,
+    loginReturn, setLoginReturn,
+  };
+
+  const renderPage = () => {
+    switch (page) {
+      case 'home':               return <BLHomePage           {...shared}/>;
+      case 'catalogue':          return <BLCataloguePage      {...shared} preset="all"/>;
+      case 'new-arrivals':       return <BLCataloguePage      {...shared} preset="newArrival"/>;
+      case 'bestsellers':        return <BLCataloguePage      {...shared} preset="bestseller"/>;
+      case 'staff-picks':        return <BLCataloguePage      {...shared} preset="staffPick"/>;
+      case 'on-sale':            return <BLCataloguePage      {...shared} preset="onSale"/>;
+      case 'search':             return <BLCataloguePage      {...shared} preset="search" query={pageData?.query}/>;
+      case 'book-detail':        return <BLBookDetailPage     {...shared} book={pageData?.book || BOOKS[0]}/>;
+      case 'login':              return <BLLoginPage          {...shared}/>;
+      case 'register':           return <BLRegisterPage       {...shared}/>;
+      case 'forgot-password':    return <BLForgotPasswordPage {...shared}/>;
+      case 'account':            return <BLAccountDashboard   {...shared}/>;
+      case 'loans':              return <BLActiveLoansPage    {...shared}/>;
+      case 'holds':              return <BLHoldsPage          {...shared}/>;
+      case 'wishlist':           return <BLWishlistPage       {...shared}/>;
+      case 'cart':               return <BLCartPage           {...shared}/>;
+      case 'checkout':           return <BLCheckoutPage       {...shared}/>;
+      case 'order-confirmation': return <BLOrderConfirmationPage {...shared}/>;
+      case 'order-history':      return <BLOrderHistoryPage   {...shared}/>;
+      case 'settings':           return <BLSettingsPage       {...shared}/>;
+      case 'faq':                return <BLFAQPage            {...shared}/>;
+      case 'contact':            return <BLContactPage        {...shared}/>;
+      case 'blog':               return <BLBlogPage           {...shared}/>;
+      case 'blog-post':          return <BLBlogPostPage       {...shared} post={pageData?.post || BLOG_POSTS[0]}/>;
+      default:                   return <BLHomePage           {...shared}/>;
+    }
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh' }}>
+      <LLHeader
+        wishlistCount={wishlist.length}
+        cartCount={cart.length}
+        userName={isLoggedIn ? 'Alexandra' : 'Guest'}
+        userEmail={isLoggedIn ? 'alexandra@lexisloft.com' : 'Sign in to continue'}
+        onLogoClick={() => navigate('home')}
+        onCartClick={() => navigate('cart')}
+        onWishlistClick={() => navigate('wishlist')}
+        onSearch={q => navigate('search', { query: q })}
+        onMenuClick={() => navigate('catalogue')}
+        style={{ maxWidth: 1276, margin: '0 auto', width: '100%' }}
+      />
+      <BLNavStrip navigate={navigate} page={page} isLoggedIn={isLoggedIn}/>
+      <main style={{ flex:1 }} data-screen-label={page}>{renderPage()}</main>
+      {appToast && <BLToast msg={appToast} onDone={()=>setAppToast(null)}/>}
+      <LLFooter assetsBase="." onSubscribe={() => showToast('Subscribed! Watch your inbox for newest books updates.')}/>
+
+      {/* ── Dev quick-nav ── */}
+      <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'rgba(27,22,66,.97)', backdropFilter:'blur(8px)', borderTop:'1px solid rgba(255,255,255,.1)', padding:'8px 12px', zIndex:300, display:'flex', gap:'6px', flexWrap:'wrap', alignItems:'center' }}>
+        <span style={{ fontSize:'9px', color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:'.1em', fontWeight:700, flexShrink:0 }}>Quick nav →</span>
+        {[
+          ['home','Home'],['catalogue','Catalogue'],['book-detail','Book'],
+          ['login','Login'],['register','Register'],['forgot-password','ForgotPwd'],
+          ['account','Account'],['loans','Loans'],['holds','Holds'],
+          ['wishlist','Wishlist'],['cart','Cart'],['checkout','Checkout'],
+          ['order-confirmation','Confirm'],['order-history','Orders'],
+          ['settings','Settings'],['faq','FAQ'],['contact','Contact'],
+          ['blog','Blog'],['blog-post','BlogPost'],
+        ].map(([id,label])=>(
+          <button key={id} onClick={()=>navigate(id, id==='book-detail'?{book:BOOKS[0]}:id==='blog-post'?{post:BLOG_POSTS[0]}:null)}
+            style={{ background:page===id?'var(--bl-orange-500)':'rgba(255,255,255,.08)', color:page===id?'#fff':'rgba(255,255,255,.7)', border:'none', borderRadius:'4px', padding:'4px 9px', fontSize:'10px', fontWeight:600, cursor:'pointer', fontFamily:'var(--font-ui)', whiteSpace:'nowrap' }}>
+            {label}
+          </button>
+        ))}
+        <div style={{ marginLeft:'auto', display:'flex', gap:'6px' }}>
+          <button onClick={()=>setIsLoggedIn(!isLoggedIn)}
+            style={{ background:isLoggedIn?'var(--bl-green-500)':'rgba(255,255,255,.08)', color:isLoggedIn?'#fff':'rgba(255,255,255,.7)', border:'none', borderRadius:'4px', padding:'4px 9px', fontSize:'10px', fontWeight:600, cursor:'pointer', fontFamily:'var(--font-ui)', whiteSpace:'nowrap' }}>
+            {isLoggedIn?'✓ Logged In':'Log In'}
+          </button>
+          <button onClick={()=>{ ['blx_cart','blx_wish','blx_auth','blx_loans','blx_holds'].forEach(k=>localStorage.removeItem(k)); window.location.reload(); }}
+            style={{ background:'rgba(255,255,255,.08)', color:'rgba(255,255,255,.5)', border:'none', borderRadius:'4px', padding:'4px 9px', fontSize:'10px', fontWeight:600, cursor:'pointer', fontFamily:'var(--font-ui)', whiteSpace:'nowrap' }}>
+            Reset
+          </button>
+        </div>
+      </div>
+      <div style={{ height:'44px' }}></div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
